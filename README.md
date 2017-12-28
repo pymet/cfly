@@ -1,6 +1,7 @@
 # cfly
 
-Build python extensions on-the-fly.
+- Build python extensions on-the-fly.
+- Run C++ code directly from python.
 
 ## Wrapping methods
 
@@ -20,7 +21,7 @@ my_method = wrap(my_method.f)
 
 ## Under the hood
 
-This section will explain what happens under the hood in the Hello World example.
+This section will explain what happens under the hood in the [Hello World](examples/hello_world.py) example.
 
 ```py
 from cfly import CModule
@@ -56,7 +57,7 @@ extern "C" PyObject * PyInit_module() {
 }
 ```
 
-The `method_0` is wrapped with a CMethod class.
+The `method_0` is wrapped with a `CMethod` class.
 
 ```py
 class CMethod:
