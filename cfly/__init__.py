@@ -78,7 +78,7 @@ class CModule:
         self.extra = ''
         self.mod = None
 
-    def __enter__(self):
+    def __enter__(self) -> 'CModule':
         return self
 
     def __exit__(self, *args):
@@ -121,7 +121,7 @@ class CModule:
             for meth in self.methods:
                 meth['proc'].f = getattr(self.mod, meth['name'])
 
-    def method(self, src, args=True):
+    def method(self, src, args=True) -> 'CMethod':
         '''
             PyCFunction with predefined args and return type.
 
