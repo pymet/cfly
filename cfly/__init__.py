@@ -38,7 +38,14 @@ extern "C" PyObject * PyInit_%(name)s() {
 }
 '''
 
-METHOD = '\nPyObject * %(name)s(PyObject * self, PyObject * args) {\n#line 0 "%(name)s"\n%(src)s;\nreturn 0;}\n'
+METHOD = '''
+PyObject * %(name)s(PyObject * self, PyObject * args) {
+#line 0 "%(name)s"
+%(src)s;
+return 0;
+}
+'''
+
 METHOD_ENTRY = '{"%(name)s", (PyCFunction)%(name)s, METH_VARARGS, 0},\n'
 
 
