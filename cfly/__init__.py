@@ -26,8 +26,8 @@ CPP = '''
 %(impl)s
 
 PyMethodDef methods[] = {
-    %(decl)s
-	{0},
+%(decl)s
+{0},
 };
 
 PyModuleDef moduledef = {PyModuleDef_HEAD_INIT, "%(name)s", 0, -1, methods, 0, 0, 0, 0};
@@ -38,8 +38,8 @@ extern "C" PyObject * PyInit_%(name)s() {
 }
 '''
 
-METHOD = 'PyObject * %(name)s(PyObject * self, PyObject * args) {\n%(src)s;\nreturn 0;}\n'
-METHOD_ENTRY = '{"%(name)s", (PyCFunction)%(name)s, %(args)s, 0},\n'
+METHOD = '\nPyObject * %(name)s(PyObject * self, PyObject * args) {\n#line 0 "%(name)s"\n%(src)s;\nreturn 0;}\n'
+METHOD_ENTRY = '{"%(name)s", (PyCFunction)%(name)s, METH_VARARGS, 0},\n'
 
 
 def raise_exception(*args, **kwargs):  # pylint: disable=unused-argument
@@ -75,7 +75,8 @@ class CModule:
         self.name = name
         self.opts = opts
         self.methods = []
-        self.extra = ''
+        self.head = ''
+        self.source = ''
         self.mod = None
 
     def __enter__(self) -> 'CModule':
@@ -90,14 +91,15 @@ class CModule:
                 f.write(SETUP % {'name': self.name, 'opts': self.opts})
 
             with open(src_cpp, 'w') as f:
-                impl = self.extra + '\n'
+                impl = self.head + '\n'
                 decl = ''
 
                 for meth in self.methods:
                     impl += METHOD % meth
                     decl += METHOD_ENTRY % meth
 
-                f.write(CPP % {'name': self.name, 'impl': impl, 'decl': decl})
+                self.source = CPP % {'name': self.name, 'impl': impl, 'decl': decl}
+                f.write(self.source)
 
             cmd = [sys.executable, setup_py, 'build_ext', '--inplace']
             proc = Popen(cmd, cwd=tempdir, stdout=PIPE, stderr=STDOUT)
@@ -121,7 +123,7 @@ class CModule:
             for meth in self.methods:
                 meth['proc'].f = getattr(self.mod, meth['name'])
 
-    def method(self, src, args=True) -> 'CMethod':
+    def method(self, src, name=None) -> 'CMethod':
         '''
             PyCFunction with predefined args and return type.
 
@@ -129,10 +131,12 @@ class CModule:
                 PyObject * method(PyObject * self, PyObject * args);
         '''
 
+        if name is None:
+            name = 'unnamed_method_%d' % len(self.methods)
+
         proc = CMethod()
         self.methods.append({
-            'args': 'METH_VARARGS' if args else 'METH_NOARGS',
-            'name': 'method_%d' % len(self.methods),
+            'name': name,
             'src': src,
             'proc': proc,
         })
