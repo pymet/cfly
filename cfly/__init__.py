@@ -49,6 +49,23 @@ PyObject * %(name)s(PyObject * self, PyObject * args) {%(src)s
 METHOD_ENTRY = '\n{"%(name)s", (PyCFunction)%(name)s, METH_VARARGS, 0},'
 
 
+def add_line_numbers(source) -> str:
+    numbered = ''
+    line_number = 0
+    lines = source.split('\n')
+    pad = next(x for x in range(10) if 10 ** x > len(lines))
+    line_format = '/* %%%dd */ %%s\n' % pad
+    for line in lines:
+        if line.startswith('#line 0'):
+            line_number = 0
+            numbered += '\n%s\n' % line
+
+        else:
+            numbered += line_format % (line_number, line)
+        line_number += 1
+    return numbered
+
+
 def raise_exception(*args, **kwargs):  # pylint: disable=unused-argument
     raise Exception('module was not compiled')
 
@@ -116,19 +133,7 @@ class CModule:
             os.unlink(src_cpp)
 
             if proc.returncode:
-                numbered = ''
-                line_number = 0
-                lines = self.source.split('\n')
-                pad = next(x for x in range(10) if 10 ** x > len(lines))
-                line_format = '/* %%%dd */ %%s\n' % pad
-                for line in lines:
-                    if line.startswith('#line 0'):
-                        line_number = 0
-                        numbered += '\n%s\n' % line
-
-                    else:
-                        numbered += line_format % (line_number, line)
-                    line_number += 1
+                numbered = add_line_numbers(self.source)
                 args = (numbered, proc.stdout.read().decode())
                 raise Exception('Compiler failed:\nSource code:\n%s\nOutput:\n%s\n' % args)
 
