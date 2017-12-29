@@ -143,3 +143,25 @@ class CModule:
             'proc': proc,
         })
         return proc
+
+
+def load_folder(path, extension='.cpp', headfile='__head__'):
+    '''
+        Load methods from a folder.
+    '''
+
+    res = {}
+
+    with CModule() as cmod:
+        for fname in os.listdir(path):
+            if not fname.endswith(extension):
+                continue
+
+            with open(os.path.join(path, fname)) as f:
+                if fname == headfile + extension:
+                    cmod.head = f.read()
+                else:
+                    idx = fname[:-len(extension)]
+                    res[idx] = cmod.method(f.read(), idx)
+
+    return res
