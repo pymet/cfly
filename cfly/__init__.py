@@ -109,7 +109,9 @@ class CModule:
             os.unlink(src_cpp)
 
             if proc.returncode:
-                raise Exception('compiler failed\n' + proc.stdout.read().decode())
+                numbered = '\n'.join('%5d: %s' % t for t in enumerate(self.source.split('\n')))
+                args = (numbered, proc.stdout.read().decode())
+                raise Exception('Compiler failed:\nSource code:\n%s\nOutput:\n%s\n' % args)
 
             binary = next(x for x in os.listdir(tempdir) if x != 'build')
             binary1 = os.path.join(tempdir, binary)
