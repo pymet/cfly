@@ -23,10 +23,11 @@ CPP = '''
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+#line 0 "__head__"
 %(impl)s
 
-PyMethodDef methods[] = {
-%(decl)s
+#line 0 "__tail__"
+PyMethodDef methods[] = {%(decl)s
 {0},
 };
 
@@ -39,14 +40,13 @@ extern "C" PyObject * PyInit_%(name)s() {
 '''
 
 METHOD = '''
-PyObject * %(name)s(PyObject * self, PyObject * args) {
 #line 0 "%(name)s"
-%(src)s;
-return 0;
+PyObject * %(name)s(PyObject * self, PyObject * args) {%(src)s
+;return 0;
 }
 '''
 
-METHOD_ENTRY = '{"%(name)s", (PyCFunction)%(name)s, METH_VARARGS, 0},\n'
+METHOD_ENTRY = '\n{"%(name)s", (PyCFunction)%(name)s, METH_VARARGS, 0},'
 
 
 def raise_exception(*args, **kwargs):  # pylint: disable=unused-argument
@@ -116,7 +116,19 @@ class CModule:
             os.unlink(src_cpp)
 
             if proc.returncode:
-                numbered = '\n'.join('%5d: %s' % t for t in enumerate(self.source.split('\n')))
+                numbered = ''
+                line_number = 0
+                lines = self.source.split('\n')
+                pad = next(x for x in range(10) if 10 ** x > len(lines))
+                line_format = '/* %%%dd */ %%s\n' % pad
+                for line in lines:
+                    if line.startswith('#line 0'):
+                        line_number = 0
+                        numbered += '\n%s\n' % line
+
+                    else:
+                        numbered += line_format % (line_number, line)
+                    line_number += 1
                 args = (numbered, proc.stdout.read().decode())
                 raise Exception('Compiler failed:\nSource code:\n%s\nOutput:\n%s\n' % args)
 
