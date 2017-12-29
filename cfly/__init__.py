@@ -15,6 +15,7 @@ SETUP = '''
 from setuptools import setup, Extension
 
 opts = %(opts)r
+opts['define_macros'] = [('CFLY', None)] + opts.get('define_macros', [])
 ext = Extension('%(name)s', sources=['src.cpp'], **opts)
 setup(name='%(name)s', version='1.0.0', ext_modules=[ext])
 '''
@@ -41,7 +42,8 @@ extern "C" PyObject * PyInit_%(name)s() {
 
 METHOD = '''
 #line 0 "%(name)s"
-PyObject * %(name)s(PyObject * self, PyObject * args) {%(src)s
+PyObject * %(name)s(PyObject * self, PyObject * args) {
+%(src)s
 ;return 0;
 }
 '''
