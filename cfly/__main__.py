@@ -189,11 +189,6 @@ if __name__ == '__main__':
         parser.print_usage()
         exit()
 
-    # args = parser.parse_args(['--help'])
-    # args = parser.parse_args(['init', 'core', 'hello'])
-    # args = parser.parse_args(['build', 'core'])
-    # print(args)
-
     if args.command == 'build':
         cmod = load_folder(args.module, name=args.name)
         cmod.save(args.module)
@@ -229,6 +224,9 @@ if __name__ == '__main__':
 
             with open(os.path.join(args.module, 'foobar_set_msg.cpp'), 'x') as f:
                 f.write(FOOBAR_SET_MSG)
+
+        else:
+            raise Exception()
 
     else:
         raise Exception()
