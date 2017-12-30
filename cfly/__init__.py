@@ -144,6 +144,9 @@ class CModule:
             binary2 = os.path.join(tempfile.gettempdir(), binary)
             shutil.move(binary1, binary2)
 
+            with open(binary2, 'rb') as f:
+                self.binary = f.read()
+
             spec = importlib.util.spec_from_file_location(self.name, binary2)
             self.mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(self.mod)
@@ -171,14 +174,14 @@ class CModule:
         return proc
 
 
-def load_folder(path, extension='.cpp', headfile='__head__'):
+def load_folder(path, extension='.cpp', headfile='__head__', name=None, opts=None):
     '''
         Load methods from a folder.
     '''
 
     res = {}
 
-    with CModule() as cmod:
+    with CModule(name, opts) as cmod:
         for fname in os.listdir(path):
             if not fname.endswith(extension):
                 continue
