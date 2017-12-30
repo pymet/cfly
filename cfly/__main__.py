@@ -177,7 +177,7 @@ if __name__ == '__main__':
     init = subparsers.add_parser('init')
     init.set_defaults(command='init')
     init.add_argument('module')
-    init.add_argument('--template', default='hello')
+    init.add_argument('--template', default='hello', choices=['hello', 'class'])
 
     build = subparsers.add_parser('build')
     build.set_defaults(command='build')
@@ -206,7 +206,7 @@ if __name__ == '__main__':
             with open(os.path.join(args.module, 'hello.cpp'), 'x') as f:
                 f.write(HELLO)
 
-        elif args.template == 'foobar':
+        elif args.template == 'class':
             with open(os.path.join(args.module, '__init__.py'), 'x') as f:
                 f.write(FOOBAR_INIT)
 
@@ -224,9 +224,3 @@ if __name__ == '__main__':
 
             with open(os.path.join(args.module, 'foobar_set_msg.cpp'), 'x') as f:
                 f.write(FOOBAR_SET_MSG)
-
-        else:
-            raise Exception()
-
-    else:
-        raise Exception()
