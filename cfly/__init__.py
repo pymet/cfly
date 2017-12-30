@@ -79,8 +79,8 @@ class CMethod:
 
     __slots__ = ['f']
 
-    def __init__(self):
-        self.f = raise_exception
+    def __init__(self, f=raise_exception):
+        self.f = f
 
     def __call__(self, *args):
         return self.f(*args)
@@ -93,7 +93,7 @@ class CModule:
 
     def __init__(self, name=None, opts=None):
         if name is None:
-            name = os.urandom(8).hex()
+            name = '_' + os.urandom(8).hex()
 
         if opts is None:
             opts = {}
@@ -103,6 +103,7 @@ class CModule:
         self.methods = []
         self.head = ''
         self.source = ''
+        self.binary = None
         self.mod = None
 
     def __enter__(self) -> 'CModule':
@@ -145,7 +146,7 @@ class CModule:
             shutil.move(binary1, binary2)
 
             with open(binary2, 'rb') as f:
-                self.binary = f.read()
+                self.binary = (binary, f.read())
 
             spec = importlib.util.spec_from_file_location(self.name, binary2)
             self.mod = importlib.util.module_from_spec(spec)
@@ -153,6 +154,8 @@ class CModule:
 
             for meth in self.methods:
                 meth['proc'].f = getattr(self.mod, meth['name'])
+
+            self.methods = {meth['name']: meth['proc'] for meth in self.methods}
 
     def method(self, src, name=None) -> 'CMethod':
         '''
@@ -173,15 +176,25 @@ class CModule:
         })
         return proc
 
+    def get(self, key):
+        if self.mod is None:
+            return None
+        return self.methods.get(key)
 
-def load_folder(path, extension='.cpp', headfile='__head__', name=None, opts=None):
+    def save(self, path):
+        fname, content = self.binary
+        with open(os.path.join(path, fname), 'wb') as f:
+            f.write(content)
+
+
+def load_folder(path, extension='.cpp', headfile='__head__', name=None, opts=None) -> 'CModule':
     '''
         Load methods from a folder.
     '''
 
-    res = {}
+    cmod = CModule(name, opts)
 
-    with CModule(name, opts) as cmod:
+    with cmod:
         for fname in os.listdir(path):
             if not fname.endswith(extension):
                 continue
@@ -191,6 +204,6 @@ def load_folder(path, extension='.cpp', headfile='__head__', name=None, opts=Non
                     cmod.head = f.read()
                 else:
                     idx = fname[:-len(extension)]
-                    res[idx] = cmod.method(f.read(), idx)
+                    cmod.method(f.read(), idx)
 
-    return res
+    return cmod
