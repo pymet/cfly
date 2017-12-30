@@ -1,6 +1,8 @@
 import argparse
 import os
 
+from cfly import load_folder
+
 
 def fmt(src):
     return src.strip() + '\n'
@@ -18,7 +20,7 @@ def wrap_hello(f):
         return f()
     return method
 
-hello = wrap_hello(_mod['hello'].f)
+hello = wrap_hello(_mod.get('hello').f)
 ''')
 
 HELLO_HEAD = fmt('''
@@ -50,10 +52,10 @@ from cfly import load_folder
 _mod = load_folder(os.path.dirname(__file__))
 
 def wrap_foobar():
-    foobar_new = _mod['foobar_new'].f
-    foobar_hello = _mod['foobar_hello'].f
-    foobar_get_msg = _mod['foobar_get_msg'].f
-    foobar_set_msg = _mod['foobar_set_msg'].f
+    foobar_new = _mod.get('foobar_new').f
+    foobar_hello = _mod.get('foobar_hello').f
+    foobar_get_msg = _mod.get('foobar_get_msg').f
+    foobar_set_msg = _mod.get('foobar_set_msg').f
 
     class Foobar():
         __slots__ = ['_obj']
@@ -169,34 +171,64 @@ Py_RETURN_NONE;
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('cfly')
-    parser.add_argument('module')
-    parser.add_argument('template', nargs='?', default='hello')
+    subparsers = parser.add_subparsers()
+    parser.set_defaults(command=None)
+
+    init = subparsers.add_parser('init')
+    init.set_defaults(command='init')
+    init.add_argument('module')
+    init.add_argument('--template', default='hello')
+
+    build = subparsers.add_parser('build')
+    build.set_defaults(command='build')
+    build.add_argument('module')
+    build.add_argument('--name', default=None)
+
     args = parser.parse_args()
+    if not args.command:
+        parser.print_usage()
+        exit()
 
-    os.makedirs(args.module)
+    # args = parser.parse_args(['--help'])
+    # args = parser.parse_args(['init', 'core', 'hello'])
+    # args = parser.parse_args(['build', 'core'])
+    # print(args)
 
-    if args.template == 'hello':
-        with open(os.path.join(args.module, '__init__.py'), 'x') as f:
-            f.write(HELLO_INIT)
+    if args.command == 'build':
+        cmod = load_folder(args.module, name=args.name)
+        cmod.save(args.module)
 
-        with open(os.path.join(args.module, '__head__.cpp'), 'x') as f:
-            f.write(HELLO_HEAD)
+    elif args.command == 'init':
+        os.makedirs(args.module)
 
-        with open(os.path.join(args.module, 'hello.cpp'), 'x') as f:
-            f.write(HELLO)
+        if args.template == 'hello':
+            with open(os.path.join(args.module, '__init__.py'), 'x') as f:
+                f.write(HELLO_INIT)
 
-    elif args.template == 'foobar':
-        with open(os.path.join(args.module, 'foobar_new.cpp'), 'x') as f:
-            f.write(FOOBAR_NEW)
+            with open(os.path.join(args.module, '__head__.cpp'), 'x') as f:
+                f.write(HELLO_HEAD)
 
-        with open(os.path.join(args.module, 'foobar_hello.cpp'), 'x') as f:
-            f.write(FOOBAR_HELLO)
+            with open(os.path.join(args.module, 'hello.cpp'), 'x') as f:
+                f.write(HELLO)
 
-        with open(os.path.join(args.module, 'foobar_get_msg.cpp'), 'x') as f:
-            f.write(FOOBAR_GET_MSG)
+        elif args.template == 'foobar':
+            with open(os.path.join(args.module, '__init__.py'), 'x') as f:
+                f.write(FOOBAR_INIT)
 
-        with open(os.path.join(args.module, 'foobar_set_msg.cpp'), 'x') as f:
-            f.write(FOOBAR_SET_MSG)
+            with open(os.path.join(args.module, '__head__.cpp'), 'x') as f:
+                f.write(FOOBAR_HEAD)
+
+            with open(os.path.join(args.module, 'foobar_new.cpp'), 'x') as f:
+                f.write(FOOBAR_NEW)
+
+            with open(os.path.join(args.module, 'foobar_hello.cpp'), 'x') as f:
+                f.write(FOOBAR_HELLO)
+
+            with open(os.path.join(args.module, 'foobar_get_msg.cpp'), 'x') as f:
+                f.write(FOOBAR_GET_MSG)
+
+            with open(os.path.join(args.module, 'foobar_set_msg.cpp'), 'x') as f:
+                f.write(FOOBAR_SET_MSG)
 
     else:
         raise Exception()
