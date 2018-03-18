@@ -9,7 +9,9 @@ import sys
 import tempfile
 from subprocess import PIPE, STDOUT, Popen
 
-__all__ = ['CModule', 'CMethod']
+from .experimental import module_from_source
+
+__all__ = ['CModule', 'CMethod', 'module_from_source']
 
 SETUP = '''
 from setuptools import setup, Extension
