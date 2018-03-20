@@ -135,6 +135,18 @@ re_type = re.compile(rf'^struct ({name}) \{{(?:(?:\s*//[^\n]*\n)*\s*)PyObject_HE
 
 
 def compile_module(name, source, opts=None):
+    '''
+        Compile a module.
+
+        Args:
+            name (str): the name of the module.
+            source (str): the source of the module.
+            opts (dict): additional build options.
+
+        Returns:
+            path to the binary
+    '''
+
     if opts is None:
         opts = {}
 
@@ -263,6 +275,18 @@ def compile_module(name, source, opts=None):
 
 
 def module_from_source(name, source, opts=None):
+    '''
+        Compile and import a module.
+
+        Args:
+            name (str): the name of the module.
+            source (str): the source of the module.
+            opts (dict): additional build options.
+
+        Returns:
+            the imported module
+    '''
+
     path = compile_module(name, source, opts)
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
