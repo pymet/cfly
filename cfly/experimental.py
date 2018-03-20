@@ -134,13 +134,11 @@ re_setter = re.compile(rf'^int ({name})_(set)_({name})\(\1 \* self, {name} \* {n
 re_type = re.compile(rf'^struct ({name}) \{{(?:(?:\s*//[^\n]*\n)*\s*)PyObject_HEAD', flags=re.M)
 
 
-def module_from_source(source, module=None, opts=None):
-    if module is None:
-        module = '_' + os.urandom(8).hex()
-
+def compile_module(name, source, opts=None):
     if opts is None:
         opts = {}
 
+    module = name
     pytypes = re_type.findall(source)
 
     methods = {m: {} for m in pytypes}
@@ -256,16 +254,17 @@ def module_from_source(source, module=None, opts=None):
         if proc.returncode:
             raise Exception('Compiler failed:\n%s' % proc.stdout.read().decode())
 
+        finaldir = tempfile.mkdtemp(prefix='cfly_')
         binary = next(x for x in os.listdir(tempdir) if x != 'build')
         binary1 = os.path.join(tempdir, binary)
-        binary2 = os.path.join(tempfile.gettempdir(), binary)
+        binary2 = os.path.join(finaldir, binary)
         shutil.move(binary1, binary2)
+        return binary2
 
-        with open(binary2, 'rb') as f:
-            binary = (binary, f.read())
 
-        spec = importlib.util.spec_from_file_location(module, binary2)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-
+def module_from_source(name, source, opts=None):
+    path = compile_module(name, source, opts)
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
     return mod
