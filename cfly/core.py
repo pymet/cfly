@@ -97,6 +97,10 @@ extern "C" PyObject * PyInit_%(module)s() {
 source_template = '''
 %(source)s
 
+#ifndef Py_PYTHON_H
+#error "Missing #include <Python.h>"
+#endif
+
 %(typedefs)s
 
 %(modulemethods)s
