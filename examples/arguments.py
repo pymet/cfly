@@ -1,7 +1,9 @@
-from cfly import CModule
+from cfly import module_from_source
 
-with CModule() as my_module:
-    my_method = my_module.method('''
+mymodule = module_from_source('mymodule', '''
+    #include <Python.h>
+
+    PyObject * meth_mymethod(PyObject * self, PyObject * args) {
         const char * arg_str;
         int arg_int;
 
@@ -10,6 +12,7 @@ with CModule() as my_module:
         }
 
         return PyUnicode_FromFormat("String: %s, Integer: %d", arg_str, arg_int);
-    ''')
+    }
+''')
 
-print(my_method('Hello World!', 12345))
+print(mymodule.mymethod('Hello World!', 12345))

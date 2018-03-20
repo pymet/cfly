@@ -1,17 +1,17 @@
-from cfly import CModule
+from cfly import module_from_source
 
 opts = {
     'extra_compile_args': ['-std=c++11'],
 }
 
-with CModule(opts=opts) as my_module:
-    my_module.head = '''
-        struct FooBar {
-            int x, y, z;
-        };
-    '''
+mymodule = module_from_source('mymodule', opts=opts, source='''
+    #include <Python.h>
 
-    my_method1 = my_module.method('''
+    struct FooBar {
+        int x, y, z;
+    };
+
+    PyObject * meth_mymethod1(PyObject * self, PyObject * args) {
         int x, y, z;
 
         if (!PyArg_ParseTuple(args, "iii", &x, &y, &z)) {
@@ -20,9 +20,9 @@ with CModule(opts=opts) as my_module:
 
         FooBar * res = new FooBar{x, y, z};
         return PyCapsule_New(res, "FooBar", 0);
-    ''')
+    }
 
-    my_method2 = my_module.method('''
+    PyObject * meth_mymethod2(PyObject * self, PyObject * args) {
         PyObject * capsule;
 
         if (!PyArg_ParseTuple(args, "O", &capsule)) {
@@ -36,9 +36,10 @@ with CModule(opts=opts) as my_module:
         }
 
         return PyUnicode_FromFormat("FooBar {%d, %d, %d}", foobar->x, foobar->y, foobar->z);
-    ''')
+    }
+''')
 
-foobar = my_method1(1, 2, 3)
+foobar = mymodule.mymethod1(1, 2, 3)
 
 print(foobar)
-print(my_method2(foobar))
+print(mymodule.mymethod2(foobar))

@@ -1,8 +1,11 @@
-from cfly import CModule
+from cfly import module_from_source
 
-with CModule() as my_module:
-    my_method = my_module.method('''
+mymodule = module_from_source('mymodule', '''
+    #include <Python.h>
+
+    PyObject * meth_hello(PyObject * self, PyObject * args) {
         return PyUnicode_FromFormat("Hello World!");
-    ''')
+    }
+''')
 
-print(my_method())
+print(mymodule.hello())

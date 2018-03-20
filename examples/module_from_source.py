@@ -1,6 +1,6 @@
 from cfly import module_from_source
 
-mod = module_from_source('''
+mymodule = module_from_source('mymodule', '''
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
@@ -13,5 +13,5 @@ PyObject * meth_hello_world(PyObject * self) {
 }
 ''')
 
-print(mod.Foobar)
-print(mod.hello_world())
+print(mymodule.Foobar)
+print(mymodule.hello_world())
