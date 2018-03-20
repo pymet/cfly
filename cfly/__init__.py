@@ -5,4 +5,4 @@
 from .core import compile_module, module_from_source
 
 __all__ = ['compile_module', 'module_from_source']
-__version__ = '0.9.3'
+__version__ = '0.9.4'
