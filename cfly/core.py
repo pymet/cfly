@@ -111,11 +111,12 @@ source_template = '''
 '''.strip('\n')
 
 setup_template = '''
+from glob import glob
 from setuptools import setup, Extension
 
 opts = %(opts)r
 opts['define_macros'] = [('CFLY', None)] + opts.get('define_macros', [])
-ext = Extension('%(module)s', sources=['src.cpp'], **opts)
+ext = Extension('%(module)s', sources=glob('**/*.cpp', recursive=True), **opts)
 setup(name='%(module)s', version='1.0.0', ext_modules=[ext])
 '''
 
@@ -138,21 +139,28 @@ re_setter = re.compile(rf'^\s*int ({name})_(set)_({name})\(\1 \* self, {name} \*
 re_type = re.compile(rf'^\s*struct ({name}) \{{(?:(?:\s*//[^\n]*\n)*\s*)PyObject_HEAD', flags=re.M)
 
 
-def compile_module(name, source, opts=None):
+def compile_module(name, source, files=None, opts=None):
     '''
         Compile a module.
 
         Args:
             name (str): the name of the module.
             source (str): the source of the module.
+            files (dict): extra source files.
             opts (dict): additional build options.
 
         Returns:
             path to the binary
     '''
 
+    if files is None:
+        files = {}
+
     if opts is None:
         opts = {}
+
+    if isinstance(source, bytes):
+        source = source.decode()
 
     module = name
     pytypes = re_type.findall(source)
@@ -247,51 +255,52 @@ def compile_module(name, source, opts=None):
         'opts': opts,
     }
 
-    source = source_template % context
-    setup = setup_template % context
+    all_files = {
+        'module.cpp': (source_template % context).encode(),
+        'setup.py': (setup_template % context).encode(),
+    }
+
+    all_files.update(files)
 
     with tempfile.TemporaryDirectory() as tempdir:
-        setup_py = os.path.join(tempdir, 'setup.py')
-        src_cpp = os.path.join(tempdir, 'src.cpp')
+        for filename, source in all_files.items():
+            filename = os.path.join(tempdir, filename)
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            with open(filename, 'wb') as f:
+                f.write(source)
 
-        with open(setup_py, 'w') as f:
-            f.write(setup)
-
-        with open(src_cpp, 'w') as f:
-            f.write(source)
-
-        cmd = [sys.executable, setup_py, 'build_ext', '--inplace']
+        cmd = [sys.executable, os.path.join(tempdir, 'setup.py'), 'build_ext', '--inplace']
         proc = Popen(cmd, cwd=tempdir, stdout=PIPE, stderr=STDOUT)
         proc.wait()
-
-        os.unlink(setup_py)
-        os.unlink(src_cpp)
 
         if proc.returncode:
             raise Exception('Compiler failed:\n%s' % proc.stdout.read().decode())
 
+        proc.stdout.close()
+
         finaldir = tempfile.mkdtemp(prefix='cfly_')
-        binary = next(x for x in os.listdir(tempdir) if x != 'build')
+        binary = next(x for x in os.listdir(tempdir) if x.endswith('.pyd') or x.endswith('.so'))
         binary1 = os.path.join(tempdir, binary)
         binary2 = os.path.join(finaldir, binary)
         shutil.move(binary1, binary2)
         return binary2
 
 
-def module_from_source(name, source, opts=None):
+def module_from_source(name, source, files=None, opts=None):
     '''
         Compile and import a module.
 
         Args:
             name (str): the name of the module.
             source (str): the source of the module.
+            files (dict): extra source files.
             opts (dict): additional build options.
 
         Returns:
             the imported module
     '''
 
-    path = compile_module(name, source, opts)
+    path = compile_module(name, source, files, opts)
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
