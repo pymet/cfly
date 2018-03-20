@@ -123,19 +123,19 @@ name = r'[A-Za-z_][A-Za-z0-9_]*'
 args = r'(?:, (?:PyObject \* (args)(?:, (?:PyObject \* (kwds)))?))?'
 closure = rf'(?:, void \* closure)?'
 
-re_function = re.compile(rf'^{name} \* meth_({name})\(PyObject \* self{args}\) \{{', flags=re.M)
+re_function = re.compile(rf'^\s*{name} \* meth_({name})\(PyObject \* self{args}\) \{{', flags=re.M)
 
 re_tps = [
-    re.compile(rf'^{name} \* ({name})_(tp_new)(PyTypeObject \* type, PyObject \* args, PyObject \* kwds) \{{', flags=re.M),
-    re.compile(rf'^{name} \* ({name})_(tp_init)\(\1 \* self, PyObject \* args, PyObject \* kwds\) \{{', flags=re.M),
-    re.compile(rf'^{name} \* ({name})_(tp_dealloc)\(\1 \* self\) \{{', flags=re.M),
-    re.compile(rf'^{name} \* ({name})_(tp_repr)\(\1 \* self\) \{{', flags=re.M),
+    re.compile(rf'^\s*{name} \* ({name})_(tp_new)(PyTypeObject \* type, PyObject \* args, PyObject \* kwds) \{{', flags=re.M),
+    re.compile(rf'^\s*{name} \* ({name})_(tp_init)\(\1 \* self, PyObject \* args, PyObject \* kwds\) \{{', flags=re.M),
+    re.compile(rf'^\s*{name} \* ({name})_(tp_dealloc)\(\1 \* self\) \{{', flags=re.M),
+    re.compile(rf'^\s*{name} \* ({name})_(tp_repr)\(\1 \* self\) \{{', flags=re.M),
 ]
 
-re_method = re.compile(rf'^{name} \* ({name})_meth_({name})\(\1 \* self{args}\) \{{', flags=re.M)
-re_getter = re.compile(rf'^{name} \* ({name})_(get)_({name})\(\1 \* self{closure}\) \{{', flags=re.M)
-re_setter = re.compile(rf'^int ({name})_(set)_({name})\(\1 \* self, {name} \* {name}{closure}\) \{{', flags=re.M)
-re_type = re.compile(rf'^struct ({name}) \{{(?:(?:\s*//[^\n]*\n)*\s*)PyObject_HEAD', flags=re.M)
+re_method = re.compile(rf'^\s*{name} \* ({name})_meth_({name})\(\1 \* self{args}\) \{{', flags=re.M)
+re_getter = re.compile(rf'^\s*{name} \* ({name})_(get)_({name})\(\1 \* self{closure}\) \{{', flags=re.M)
+re_setter = re.compile(rf'^\s*int ({name})_(set)_({name})\(\1 \* self, {name} \* {name}{closure}\) \{{', flags=re.M)
+re_type = re.compile(rf'^\s*struct ({name}) \{{(?:(?:\s*//[^\n]*\n)*\s*)PyObject_HEAD', flags=re.M)
 
 
 def compile_module(name, source, opts=None):
