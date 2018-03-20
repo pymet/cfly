@@ -3,68 +3,31 @@
 - Build python extensions on-the-fly.
 - Run C++ code directly from python.
 
-## Wrapping methods
+## Example
 
 ```py
-with CModule() as my_module:
-    my_method = my_module.method(...)
+from cfly import module_from_source
 
-# wrapper function for my_method
-def wrap(f):
-    def method(*args):
-        return f(*args)
-    return method
-
-# wrap my_method
-my_method = wrap(my_method.f)
-```
-
-## Under the hood
-
-This section will explain what happens under the hood in the [Hello World](examples/hello_world.py) example.
-
-```py
-from cfly import CModule
-
-with CModule() as my_module:
-    my_method = my_module.method('''
-        return PyUnicode_FromFormat("Hello World!");
-    ''')
-
-print(my_method())
-```
-
-The calls above are almost equivalent with the compiled version of the following python module written in C/C++.
-
-```cpp
+mymodule = module_from_source('mymodule', '''
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-PyObject * method_0(PyObject * self, PyObject * args) {
-	return PyUnicode_FromFormat("Hello World!");
-}
-
-PyMethodDef methods[] = {
-	{"method_0", (PyCFunction)method_0, METH_VARARGS, 0},
-	{0},
+struct Foobar {
+    PyObject_HEAD
 };
 
-PyModuleDef moduledef = {PyModuleDef_HEAD_INIT, "module", 0, -1, methods, 0, 0, 0, 0};
-
-extern "C" PyObject * PyInit_module() {
-	PyObject * module = PyModule_Create(&moduledef);
-	return module;
+PyObject * meth_hello_world(PyObject * self) {
+    return PyLong_FromLong(1234);
 }
+''')
+
+print(mymodule.Foobar)
+print(mymodule.hello_world())
 ```
 
-The `method_0` is wrapped with a `CMethod` class.
+**output**
 
 ```py
-class CMethod:
-    __slots__ = ['f']
-    ...
-
-# my_method = my_module.method(...) will return a CMethod
-# when leaving the with statement my_method.f will be equal to method_0
-# calling my_method() will call my_method.f()
+<class 'mymodule.Foobar'>
+1234
 ```
