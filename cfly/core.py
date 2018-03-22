@@ -271,10 +271,10 @@ def compile_module(name, source, files=None, opts=None):
 
         cmd = [sys.executable, os.path.join(tempdir, 'setup.py'), 'build_ext', '--inplace']
         proc = Popen(cmd, cwd=tempdir, stdout=PIPE, stderr=STDOUT)
-        proc.wait()
+        output = proc.communicate()[0]
 
         if proc.returncode:
-            raise Exception('Compiler failed:\n%s' % proc.stdout.read().decode())
+            raise Exception('Compiler failed:\n%s' % output.decode())
 
         proc.stdout.close()
 
