@@ -127,8 +127,8 @@ closure = rf'(?:, void \* closure)?'
 re_function = re.compile(rf'^\s*{name} \* meth_({name})\(PyObject \* self{args}\) \{{', flags=re.M)
 
 re_tps = [
-    re.compile(rf'^\s*{name} \* ({name})_(tp_new)(PyTypeObject \* type, PyObject \* args, PyObject \* kwds) \{{', flags=re.M),
-    re.compile(rf'^\s*{name} \* ({name})_(tp_init)\(\1 \* self, PyObject \* args, PyObject \* kwds\) \{{', flags=re.M),
+    re.compile(rf'^\s*{name} \* ({name})_(tp_new)\(PyTypeObject \* type, PyObject \* args, PyObject \* kwds\) \{{', flags=re.M),
+    re.compile(rf'^\s*int ({name})_(tp_init)\(\1 \* self, PyObject \* args, PyObject \* kwds\) \{{', flags=re.M),
     re.compile(rf'^\s*{name} \* ({name})_(tp_dealloc)\(\1 \* self\) \{{', flags=re.M),
     re.compile(rf'^\s*{name} \* ({name})_(tp_repr)\(\1 \* self\) \{{', flags=re.M),
 ]
@@ -168,7 +168,7 @@ def compile_module(name, source, files=None, opts=None):
     methods = {m: {} for m in pytypes}
     getset = {m: {} for m in pytypes}
 
-    tp = {
+    tps = {
         m: {
             'tp_init': 0,
             'tp_repr': 0,
@@ -197,7 +197,7 @@ def compile_module(name, source, files=None, opts=None):
 
     for m in iterall(tp.finditer(source) for tp in re_tps):
         name, tp = m.groups()
-        tp[name][tp] = f'{name}_{tp}'
+        tps[name][tp] = f'{name}_{tp}'
 
     typedefs = []
     typeinits = []
@@ -208,7 +208,7 @@ def compile_module(name, source, files=None, opts=None):
             'name': name,
         }
 
-        context.update(tp[name])
+        context.update(tps[name])
 
         if methods[name]:
             context['tp_methods'] = f'{name}_tp_methods'
