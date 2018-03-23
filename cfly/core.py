@@ -165,10 +165,10 @@ def compile_module(name, source, files=None, opts=None):
     module = name
     pytypes = re_type.findall(source)
 
-    methods = {m: {} for m in pytypes}
-    getset = {m: {} for m in pytypes}
+    cls_methods = {m: {} for m in pytypes}
+    cls_getset = {m: {} for m in pytypes}
 
-    tps = {
+    cls_magic = {
         m: {
             'tp_init': 0,
             'tp_repr': 0,
@@ -188,16 +188,16 @@ def compile_module(name, source, files=None, opts=None):
 
     for m in re_method.finditer(source):
         name, method, args, kwds = m.groups()
-        methods[name][method] = 'METH_VARARGS | METH_KEYWORDS' if kwds else 'METH_VARARGS' if args else 'METH_NOARGS'
+        cls_methods[name][method] = 'METH_VARARGS | METH_KEYWORDS' if kwds else 'METH_VARARGS' if args else 'METH_NOARGS'
 
     for m in sorted(iterall(re_getter.finditer(source), re_setter.finditer(source)), key=lambda m: m.span()):
         name, gs, propname = m.groups()
-        getset[name].setdefault(propname, {'get': False, 'set': False})
-        getset[name][propname][gs] = True
+        cls_getset[name].setdefault(propname, {'get': False, 'set': False})
+        cls_getset[name][propname][gs] = True
 
     for m in iterall(tp.finditer(source) for tp in re_tps):
         name, tp = m.groups()
-        tps[name][tp] = f'{name}_{tp}'
+        cls_magic[name][tp] = f'{name}_{tp}'
 
     typedefs = []
     typeinits = []
@@ -208,21 +208,21 @@ def compile_module(name, source, files=None, opts=None):
             'name': name,
         }
 
-        context.update(tps[name])
+        context.update(cls_magic[name])
 
-        if methods[name]:
+        if cls_methods[name]:
             context['tp_methods'] = f'{name}_tp_methods'
             tp_methods_def = f'PyMethodDef {name}_tp_methods[] = {{\n'
-            for meth, flags in methods[name].items():
+            for meth, flags in cls_methods[name].items():
                 tp_methods_def += f'\t{{"{meth}", (PyCFunction){name}_meth_{meth}, {flags}, 0}},\n'
             tp_methods_def += f'\t{{0, 0, 0, 0}},\n'
             tp_methods_def += f'}};'
             typedefs.append(tp_methods_def)
 
-        if methods[name]:
+        if cls_methods[name]:
             context['tp_getset'] = f'{name}_tp_getset'
             tp_getset_def = f'PyGetSetDef {name}_tp_getset[] = {{\n'
-            for prop, content in getset[name].items():
+            for prop, content in cls_getset[name].items():
                 getter = f'(getter){name}_get_{prop}' if content['get'] else '0'
                 setter = f'(setter){name}_set_{prop}' if content['set'] else '0'
                 tp_getset_def += f'\t{{(char *)"{prop}", {getter}, {setter}, 0, 0}},\n'
