@@ -246,7 +246,7 @@ def build_module(name, source=None, *, sources=None, preprocess=None, output=Non
             code = render_template(source_template, module=name, types=module_types, methods=module_methods)
             sources.append((writeall(module_home, filename, source + code), filename))
 
-        code = render_template(module_template, module=name, types=module_types, methods=module_methods)
+        code = render_template(module_template, module=name, types=global_module_types, methods=global_module_methods)
         sources.append((writeall(module_home, 'module.cpp', code), None))
         exports = [f'PyInit_{name}']
 
