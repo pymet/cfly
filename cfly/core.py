@@ -220,7 +220,10 @@ def build_module(name, source=None, *, sources=None, preprocess=None, output=Non
         macros
     )
 
-    if cache and checksum == old_checksum and is_up_to_date(output, sources):
+    if checksum != old_checksum:
+        cache = False
+
+    if cache and is_up_to_date(output, sources):
         return load_module(name, output)
 
     with open(os.path.join(build_dir, 'build.log'), 'wb+') as build_log:
