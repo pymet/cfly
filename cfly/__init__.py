@@ -2,8 +2,7 @@
     Build python extensions on-the-fly.
 '''
 
-from .core import compile_module, module_from_source
-from . import utils
+from .core import build_module
 
-__all__ = ['compile_module', 'module_from_source', 'utils']
-__version__ = '0.9.6'
+__all__ = ['build_module']
+__version__ = '0.9.7'

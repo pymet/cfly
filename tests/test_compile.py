@@ -1,10 +1,10 @@
 import unittest
 
-from cfly import compile_module
+from cfly import build_module
 
 class TestCase(unittest.TestCase):
     def test_compile(self):
-        mymod = compile_module('mymod', '#include <Python.h>')
+        build_module('mymod')
 
 
 if __name__ == '__main__':

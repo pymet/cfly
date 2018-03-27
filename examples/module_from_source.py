@@ -1,6 +1,6 @@
-from cfly import module_from_source
+from cfly import build_module
 
-mymodule = module_from_source('mymodule', '''
+mymodule = build_module('mymodule', '''
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 

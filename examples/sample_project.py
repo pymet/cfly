@@ -1,9 +1,9 @@
-import os
+from cfly import build_module
 
-from cfly import module_from_source
-from cfly.utils import read_files_from_folder
-
-files = read_files_from_folder(os.path.join(os.path.dirname(__file__), 'sample_project'))
-mymodule = module_from_source('mymodule', files.pop('module.cpp'), files)
+mymodule = build_module(
+    'mymodule',
+    sources=['examples/sample_project/module.cpp', 'examples/sample_project/something.cpp'],
+    preprocess=['examples/sample_project/module.cpp'],
+)
 
 print(mymodule.get_x())

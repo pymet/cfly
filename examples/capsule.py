@@ -1,10 +1,6 @@
-from cfly import module_from_source
+from cfly import build_module
 
-opts = {
-    'extra_compile_args': ['-std=c++11'],
-}
-
-mymodule = module_from_source('mymodule', opts=opts, source='''
+mymodule = build_module('mymodule', source='''
     #include <Python.h>
 
     struct FooBar {
