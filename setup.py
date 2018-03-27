@@ -11,7 +11,7 @@ def readfile(filename):
 
 setup(
     name='cfly',
-    version='0.9.9',
+    version='0.9.10',
     description='Build python extensions on-the-fly. Run C++ code directly from Python',
     long_description=readfile('README.md'),
     url='https://github.com/pymet/cfly',
