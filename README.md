@@ -1,14 +1,14 @@
 # cfly
 
 - Build python extensions on-the-fly.
-- Run C++ code directly from python.
+- Run C++ code directly from Python.
 
 ## Example
 
 ```py
-from cfly import module_from_source
+from cfly import build_module
 
-mymodule = module_from_source('mymodule', '''
+mymodule = build_module('mymodule', '''
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
