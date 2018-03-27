@@ -3,6 +3,12 @@
 - Build python extensions on-the-fly.
 - Run C++ code directly from Python.
 
+## Links
+
+- [Documentation](https://cfly.readthedocs.io)
+- [cfly on Github](https://github.com/pymet/cfly)
+- [cfly on PyPI](https://pypi.org/project/cfly)
+
 ## Example
 
 ```py
