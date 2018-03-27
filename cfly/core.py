@@ -111,7 +111,7 @@ def parse_source(source, build_log):
 
                 elif prefix in ('get', 'set'):
                     module_types[typ].getset.setdefault(rest, GetSet(rest))
-                    setattr(module_types[typ].getset[rest], prefix, Meth(rval, f'{typ}_{rest}', args))
+                    setattr(module_types[typ].getset[rest], prefix, Meth(rval, f'{typ}_{name}', args))
                     setattr(module_types[typ], 'tp_getset', f'{typ}_tp_getset')
 
                 elif prefix in ('am', 'mp', 'nb', 'sq', 'tp'):
