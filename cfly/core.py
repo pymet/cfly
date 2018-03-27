@@ -44,47 +44,17 @@ class Type:
         self.getset = {}
 
 
-class Compiler:
-    def __init__(self):
-        self.compiler = new_compiler()
-        self.compiler.initialize()
+def create_compiler():
+    compiler = new_compiler()
+    compiler.initialize()
 
-        if hasattr(sys, 'real_prefix'):
-            self.compiler.add_library_dir(os.path.join(getattr(sys, 'real_prefix'), 'libs'))
+    if hasattr(sys, 'real_prefix'):
+        compiler.add_library_dir(os.path.join(getattr(sys, 'real_prefix'), 'libs'))
 
-        self.compiler.add_library_dir(os.path.join(sys.exec_prefix, 'libs'))
-        self.compiler.add_library_dir(os.path.join(sys.base_exec_prefix, 'libs'))
-
-    def compile(self, build_dir, sources, output, macros, include_dirs, library_dirs, libraries, exports, cache):
-
-        def obj_file(source, build_dir):
-            return os.path.splitext(os.path.join(build_dir, source))[0] + '.obj'
-
-        include_dirs = (include_dirs or []) + [get_python_inc()]
-        objects = [obj_file(source, build_dir) for source, original in sources]
-
-        todo = []
-        for pair, obj in zip(sources, objects):
-            source, original = pair
-            if os.path.isfile(obj) and os.path.getmtime(obj) > os.path.getmtime(original or source):
-                continue
-            todo.append(pair)
-
-        if not cache:
-            todo = sources
-
-        if todo:
-            for source, original in todo:
-                extra = [os.path.abspath(os.path.dirname(original))] if original else []
-                self.compiler.compile([source], build_dir, macros, extra + include_dirs)
-            self.compiler.link('shared_object', objects, 'output', build_dir, libraries, library_dirs, [], exports)
-
-            if os.path.isfile(output):
-                try:
-                    os.unlink(output)
-                except PermissionError:
-                    shutil.move(output, os.path.join(build_dir, f'_{os.urandom(8).hex()}'))
-            shutil.move(os.path.join(build_dir, 'output'), output)
+    compiler.add_library_dir(os.path.join(sys.exec_prefix, 'libs'))
+    compiler.add_library_dir(os.path.join(sys.base_exec_prefix, 'libs'))
+    compiler.add_include_dir(get_python_inc())
+    return compiler
 
 
 def load_module(name, path):
@@ -182,6 +152,10 @@ def render_template(template, **kwargs):
     return code
 
 
+def obj_file(source, build_dir):
+    return os.path.splitext(os.path.join(build_dir, source))[0] + '.obj'
+
+
 def build_module(name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
         include_dirs=None, library_dirs=None, libraries=None, macros=None, cache=True):
 
@@ -250,17 +224,12 @@ def build_module(name, source=None, *, sources=None, preprocess=None, output=Non
         sources.append((writeall(module_home, 'module.cpp', code), None))
         exports = [f'PyInit_{name}']
 
-        compiler = Compiler()
+        compiler = create_compiler()
 
         def spawn(cmd):
             old_path = os.getenv('path')
             try:
-                build_log.write('\nRunning:\n'.encode())
-                for node in cmd:
-                    build_log.write(f'\t{node}\n'.encode())
-                build_log.write('\n'.encode())
-                build_log.flush()
-                os.environ['path'] = compiler.compiler._paths
+                os.environ['path'] = compiler._paths
                 ret = subprocess.call(cmd, stdout=build_log, stderr=subprocess.STDOUT)
                 if ret:
                     build_log.seek(0)
@@ -271,10 +240,39 @@ def build_module(name, source=None, *, sources=None, preprocess=None, output=Non
                 build_log.flush()
                 os.environ['path'] = old_path
 
-        compiler.compiler.spawn = spawn
+        compiler.spawn = spawn
+
+        for include_dir in include_dirs or []:
+            compiler.add_include_dir(include_dir)
+
+        for library_dir in library_dirs or []:
+            compiler.add_library_dir(library_dir)
 
         try:
-            compiler.compile(build_dir, sources, output, macros, include_dirs, library_dirs, libraries, exports, cache)
+            objects = [obj_file(source, build_dir) for source, original in sources]
+
+            todo = []
+            for pair, obj in zip(sources, objects):
+                source, original = pair
+                if not is_up_to_date(obj, [original or source]):
+                    todo.append(pair)
+
+            if not cache:
+                todo = sources
+
+            if todo:
+                for source, original in todo:
+                    original_folder = [os.path.abspath(os.path.dirname(original))] if original else []
+                    compiler.compile([source], build_dir, macros, original_folder)
+                compiler.link('shared_object', objects, 'output', build_dir, libraries, [], [], exports)
+
+                if os.path.isfile(output):
+                    try:
+                        os.unlink(output)
+                    except PermissionError:
+                        shutil.move(output, os.path.join(build_dir, f'_{os.urandom(8).hex()}'))
+                shutil.move(os.path.join(build_dir, 'output'), output)
+
         except CompileError as ex:
             raise ex from None
 
