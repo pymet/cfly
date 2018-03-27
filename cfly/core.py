@@ -20,11 +20,13 @@ braces = r'(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{[^\{\}]*\}[^\{\}]*)?)
 re_type = re.compile(f'^\\s*struct\\s+({typename})\\s*\\{{(\\n\\s*PyObject_HEAD\\n{braces})\\}};', re.M)
 re_proc = re.compile(f'^\\s*({varname}(?:\\s*\\*)?)\\s*({typename})_({varname})\\s*\\(([^\\)]*)\\)\\s*\\{{', re.M)
 
+flags = ['METH_NOARGS', 'METH_NOARGS', 'METH_VARARGS', 'METH_VARARGS | METH_KEYWORDS']
+
 
 class Meth:
     def __init__(self, rval, name, args):
         self.name = name
-        self.flags = ['METH_NOARGS', 'METH_NOARGS', 'METH_VARARGS', 'METH_VARARGS | METH_KEYWORDS'][len(args.split(','))]
+        self.flags = flags[len(args.split(','))]
         self.args = args
         self.rval = rval
 
@@ -156,8 +158,29 @@ def obj_file(source, build_dir):
     return os.path.splitext(os.path.join(build_dir, source))[0] + '.obj'
 
 
-def build_module(name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
+def build_module(
+        name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
         include_dirs=None, library_dirs=None, libraries=None, macros=None, cache=True):
+
+    '''
+        Args:
+            name (str): The module name (must be unique).
+            source (str): the source code in C++.
+
+        Keyword Args:
+            sources (str): Source files.
+            preprocess (str): Source files that need cfly's preprocessing.
+            output (str): The output file. defaults to '{name}.pyd'.
+            build_dir (str): The build directory. defaults to 'build'.
+            include_dirs (list): Additional include directories.
+            library_dirs (list): Additional library directories.
+            libraries (list): Additional libraries.
+            macros (list): Predefined macros. (name, value) pairs.
+            cache (bool): Enable cache.
+
+        Returns:
+            the compiled and imported module.
+    '''
 
     if output is None:
         output = f'{name}.pyd'
