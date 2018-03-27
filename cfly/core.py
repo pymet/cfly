@@ -55,7 +55,7 @@ class Compiler:
         self.compiler.add_library_dir(os.path.join(sys.exec_prefix, 'libs'))
         self.compiler.add_library_dir(os.path.join(sys.base_exec_prefix, 'libs'))
 
-    def compile(self, build_dir, sources, output, macros, include_dirs, library_dirs, libraries, exports):
+    def compile(self, build_dir, sources, output, macros, include_dirs, library_dirs, libraries, exports, cache):
 
         def obj_file(source, build_dir):
             return os.path.splitext(os.path.join(build_dir, source))[0] + '.obj'
@@ -69,6 +69,9 @@ class Compiler:
             if os.path.isfile(obj) and os.path.getmtime(obj) > os.path.getmtime(original or source):
                 continue
             todo.append(pair)
+
+        if not cache:
+            todo = sources
 
         if todo:
             for source, original in todo:
@@ -268,7 +271,7 @@ def build_module(name, source=None, *, sources=None, preprocess=None, output=Non
         compiler.compiler.spawn = spawn
 
         try:
-            compiler.compile(build_dir, sources, output, macros, include_dirs, library_dirs, libraries, exports)
+            compiler.compile(build_dir, sources, output, macros, include_dirs, library_dirs, libraries, exports, cache)
         except CompileError as ex:
             raise ex from None
 
