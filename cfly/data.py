@@ -75,15 +75,18 @@ tps = [
     'tp_traverse',
 ]
 
-template = '''\
+source_template = '''\
+//!
 #include <Python.h>
 //!
-/// for typ in types.values()
-/// if typ.tp_methods
-/// for meth in typ.methods.values()
-extern /*{meth.rval}*/ /*{typ.name}*/_meth_/*{meth.name}*/(/*{meth.args}*/);
+/// if methods
+/// for meth in methods.values()
+PyCFunction __meth_/*{meth.name}*/ = (PyCFunction)meth_/*{meth.name}*/;
 /// endfor
 //!
+/// endif
+/// for typ in types.values()
+/// if typ.tp_methods
 PyMethodDef /*{typ.name}*/_tp_methods[] = {
 /// for meth in typ.methods.values()
     {"/*{meth.name}*/", (PyCFunction)/*{typ.name}*/_meth_/*{meth.name}*/, /*{meth.flags}*/, "/*{module}*/./*{typ.name}*/./*{meth.name}*/"},
@@ -93,15 +96,6 @@ PyMethodDef /*{typ.name}*/_tp_methods[] = {
 //!
 /// endif
 /// if typ.tp_getset
-/// for getset in typ.getset.values()
-/// if getset.get
-extern /*{getset.get.rval}*/ /*{getset.get.name}*/(/*{getset.get.args}*/);
-/// endif
-/// if getset.set
-extern /*{getset.set.rval}*/ /*{getset.set.name}*/(/*{getset.set.args}*/);
-/// endif
-/// endfor
-//!
 PyGetSetDef /*{typ.name}*/_tp_getset[] = {
 /// for getset in typ.getset.values()
     {"/*{getset.name}*/", (getter)/*{ getset.get.name or 0 }*/, (setter)/*{ getset.set.name or 0 }*/, "/*{module}*/./*{typ.name}*/./*{getset.name}*/", 0},
@@ -182,8 +176,6 @@ PyAsyncMethods /*{typ.name}*/_tp_as_async = {
 };
 //!
 /// endif
-struct /*{typ.name}*/ {/*{typ.struct}*/};
-//!
 PyTypeObject /*{typ.name}*/_Type = {
     PyVarObject_HEAD_INIT(0, 0)
     "/*{module}*/./*{typ.name}*/",
@@ -236,15 +228,27 @@ PyTypeObject /*{typ.name}*/_Type = {
 };
 //!
 /// endfor
+//!
+'''
+
+module_template = '''\
+#include <Python.h>
+//!
+/// if types
+/// for typ in types.values()
+extern PyTypeObject /*{typ.name}*/_Type;
+/// endfor
+//!
+/// endif
 /// if methods
 /// for meth in methods.values()
-extern /*{meth.rval}*/ meth_/*{meth.name}*/(/*{meth.args}*/);
+extern PyCFunction __meth_/*{meth.name}*/;
 /// endfor
 //!
 /// endif
 PyMethodDef module_methods[] = {
 /// for meth in methods.values()
-    {"/*{meth.name}*/", (PyCFunction)meth_/*{meth.name}*/, /*{meth.flags}*/, 0},
+    {"/*{meth.name}*/", __meth_/*{meth.name}*/, /*{meth.flags}*/, 0},
 /// endfor
     {0, 0, 0, 0},
 };
