@@ -13,12 +13,12 @@ from jinja2 import Template
 
 from .data import source_template, module_template, tps
 
-typename = r'[A-Za-z][A-Za-z0-9]*'
-varname = r'[A-Za-z_][A-Za-z0-9_]*'
+tname = r'[A-Za-z][A-Za-z0-9]*'
+vname = r'[A-Za-z_][A-Za-z0-9_]*'
 braces = r'(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{[^\{\}]*\}[^\{\}]*)?)\}[^\{\}]*)?)\}[^\{\}]*)?)'
 
-re_type = re.compile(f'^\\s*struct\\s+({typename})\\s*\\{{(\\n\\s*PyObject_HEAD\\n{braces})\\}};', re.M)
-re_proc = re.compile(f'^\\s*({varname}(?:\\s*\\*)?)\\s*({typename})_({varname})\\s*\\(([^\\)]*)\\)\\s*\\{{', re.M)
+re_type = re.compile(r'^\s*struct\s+(' + tname + r')\s*\{(\n\s*PyObject_HEAD\n' + braces + r')\};', re.M)
+re_proc = re.compile(r'^\s*(' + vname + r'(?:\s*\*)?)\s*(' + tname + r')_(' + vname + r')\s*\(([^\)]*)\)\s*\{', re.M)
 
 flags = ['METH_NOARGS', 'METH_NOARGS', 'METH_VARARGS', 'METH_VARARGS | METH_KEYWORDS']
 
@@ -82,28 +82,28 @@ def parse_source(source, build_log):
 
                 if prefix == 'meth':
                     module_types[typ].methods.setdefault(rest, Meth(rval, rest, args))
-                    setattr(module_types[typ], 'tp_methods', f'{typ}_tp_methods')
+                    setattr(module_types[typ], 'tp_methods', '%(typ)s_tp_methods' % locals())
 
                 elif prefix in ('get', 'set'):
                     module_types[typ].getset.setdefault(rest, GetSet(rest))
-                    setattr(module_types[typ].getset[rest], prefix, Meth(rval, f'{typ}_{name}', args))
-                    setattr(module_types[typ], 'tp_getset', f'{typ}_tp_getset')
+                    setattr(module_types[typ].getset[rest], prefix, Meth(rval, '%(typ)s_%(name)s' % locals(), args))
+                    setattr(module_types[typ], 'tp_getset', '%(typ)s_tp_getset' % locals())
 
                 elif prefix in ('am', 'mp', 'nb', 'sq', 'tp'):
                     if re.match('(' + '|'.join(tps) + ')', name):
-                        setattr(module_types[typ], name, f'{typ}_{name}')
+                        setattr(module_types[typ], name, '%(typ)s_%(name)s' % locals())
 
                     else:
-                        build_log.write(f'Unknown {name} for {typ}_{name}\n'.encode())
+                        build_log.write(('Unknown %(name)s for %(typ)s_%(name)s\n' % locals()).encode())
 
                 else:
-                    build_log.write(f'Unknown prefix "{prefix}" in {typ}_{name}\n'.encode())
+                    build_log.write(('Unknown prefix "%(prefix)s" in %(typ)s_%(name)s\n' % locals()).encode())
 
             else:
-                build_log.write(f'If {typ}_{name} is a method rename it to {typ}_meth_{name}\n'.encode())
+                build_log.write(('%(typ)s_%(name)s should be %(typ)s_meth_%(name)s\n' % locals()).encode())
 
         else:
-            build_log.write(f'Unknown type {typ} in {typ}_{name}\n'.encode())
+            build_log.write(('Unknown type %(typ)s in %(typ)s_%(name)s\n' % locals()).encode())
 
     build_log.flush()
 
@@ -183,7 +183,7 @@ def build_module(
     '''
 
     if output is None:
-        output = f'{name}.pyd'
+        output = name + '.pyd'
 
     if sources is None:
         sources = []
@@ -223,7 +223,7 @@ def build_module(
     if cache and is_up_to_date(output, sources):
         return load_module(name, output)
 
-    with open(os.path.join(build_dir, 'build.log'), 'wb+') as build_log:
+    with open(os.path.join(build_dir, name + '.log'), 'wb+') as build_log:
         shutil.rmtree(module_home, ignore_errors=True)
         os.makedirs(module_home, exist_ok=True)
 
@@ -245,7 +245,7 @@ def build_module(
 
         code = render_template(module_template, module=name, types=global_module_types, methods=global_module_methods)
         sources.append((writeall(module_home, 'module.cpp', code), None))
-        exports = [f'PyInit_{name}']
+        exports = ['PyInit_' + name]
 
         compiler = create_compiler()
 
@@ -257,7 +257,7 @@ def build_module(
                 if ret:
                     build_log.seek(0)
                     entire_log = build_log.read().decode()
-                    raise DistutilsExecError(f'Compiler failed:\n{entire_log}')
+                    raise DistutilsExecError('Compiler failed:\n' + entire_log)
 
             finally:
                 build_log.flush()
@@ -293,7 +293,7 @@ def build_module(
                     try:
                         os.unlink(output)
                     except PermissionError:
-                        shutil.move(output, os.path.join(build_dir, f'_{os.urandom(8).hex()}'))
+                        shutil.move(output, os.path.join(build_dir, '_' + os.urandom(8).hex()))
                 shutil.move(os.path.join(build_dir, 'output'), output)
 
         except CompileError as ex:
