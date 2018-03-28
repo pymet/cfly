@@ -5,3 +5,7 @@ em {
 .rst-content .highlight>pre {
     line-height: 18px;
 }
+
+.rst-content .linenodiv>pre {
+    line-height: 18px;
+}
