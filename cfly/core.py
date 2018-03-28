@@ -215,7 +215,7 @@ def build_module(
     if checksum != old_checksum:
         cache = False
 
-    if cache and is_up_to_date(output, sources):
+    if cache and is_up_to_date(output, sources + preprocess):
         return load_module(name, output)
 
     with open(os.path.join(build_dir, name + '.log'), 'wb+') as build_log:
