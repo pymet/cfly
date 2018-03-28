@@ -7,7 +7,7 @@ import subprocess
 import sys
 from distutils.ccompiler import new_compiler
 from distutils.errors import CompileError, DistutilsExecError
-from distutils.sysconfig import get_python_inc, get_config_var
+from distutils.sysconfig import customize_compiler, get_config_var, get_python_inc
 
 from jinja2 import Template
 
@@ -46,6 +46,8 @@ def create_compiler():
     compiler = new_compiler()
     if hasattr(compiler, 'initialize'):
         compiler.initialize()
+
+    customize_compiler(compiler)
 
     if hasattr(sys, 'real_prefix'):
         compiler.add_library_dir(os.path.join(getattr(sys, 'real_prefix'), 'libs'))
