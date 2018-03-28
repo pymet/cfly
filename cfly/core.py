@@ -7,7 +7,7 @@ import subprocess
 import sys
 from distutils.ccompiler import new_compiler
 from distutils.errors import CompileError, DistutilsExecError
-from distutils.sysconfig import get_python_inc
+from distutils.sysconfig import get_python_inc, get_config_var
 
 from jinja2 import Template
 
@@ -176,7 +176,7 @@ def build_module(
     '''
 
     if output is None:
-        output = name + '.pyd'
+        output = name + get_config_var('EXT_SUFFIX')
 
     if sources is None:
         sources = []
