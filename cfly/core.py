@@ -1,17 +1,17 @@
+import hashlib
 import importlib
 import os
 import re
 import shutil
 import subprocess
 import sys
-import hashlib
 from distutils.ccompiler import new_compiler
-from distutils.errors import DistutilsExecError, CompileError
+from distutils.errors import CompileError, DistutilsExecError
 from distutils.sysconfig import get_python_inc
 
 from jinja2 import Template
 
-from .data import source_template, module_template, tps
+from .data import module_template, source_template, tps
 
 tname = r'[A-Za-z][A-Za-z0-9]*'
 vname = r'[A-Za-z_][A-Za-z0-9_]*'
