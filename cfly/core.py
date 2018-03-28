@@ -150,10 +150,6 @@ def render_template(template, **kwargs):
     return code
 
 
-def obj_file(source, build_dir):
-    return os.path.splitext(os.path.join(build_dir, source))[0] + '.obj'
-
-
 def build_module(
         name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
         include_dirs=None, library_dirs=None, libraries=None, macros=None, cache=True):
@@ -246,9 +242,9 @@ def build_module(
         compiler = create_compiler()
 
         def spawn(cmd):
-            old_path = os.getenv('path')
+            old_path = os.getenv('path', '')
             try:
-                os.environ['path'] = compiler._paths
+                os.environ['path'] = getattr(compiler, '_paths', old_path)
                 ret = subprocess.call(cmd, stdout=build_log, stderr=subprocess.STDOUT)
                 if ret:
                     build_log.seek(0)
@@ -268,7 +264,7 @@ def build_module(
             compiler.add_library_dir(library_dir)
 
         try:
-            objects = [obj_file(source, build_dir) for source, original in sources]
+            objects = compiler.object_filenames([source for source, original in sources], 0, build_dir)
 
             todo = []
             for pair, obj in zip(sources, objects):
