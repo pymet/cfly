@@ -11,14 +11,10 @@ from distutils.sysconfig import get_python_inc
 
 from jinja2 import Template
 
-from .data import module_template, source_template, tps
+from .data import module_template, proc_pattern, source_template, tps, type_pattern
 
-tname = r'[A-Za-z][A-Za-z0-9]*'
-vname = r'[A-Za-z_][A-Za-z0-9_]*'
-braces = r'(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{[^\{\}]*\}[^\{\}]*)?)\}[^\{\}]*)?)\}[^\{\}]*)?)'
-
-re_type = re.compile(r'^\s*struct\s+(' + tname + r')\s*\{(\n\s*PyObject_HEAD\n' + braces + r')\};', re.M)
-re_proc = re.compile(r'^\s*(' + vname + r'(?:\s*\*)?)\s*(' + tname + r')_(' + vname + r')\s*\(([^\)]*)\)\s*\{', re.M)
+re_type = re.compile(type_pattern, re.M)
+re_proc = re.compile(proc_pattern, re.M)
 
 flags = ['METH_NOARGS', 'METH_NOARGS', 'METH_VARARGS', 'METH_VARARGS | METH_KEYWORDS']
 

@@ -75,6 +75,10 @@ tps = [
     'tp_traverse',
 ]
 
+
+type_pattern = r'^\s*struct\s+([A-Za-z][A-Za-z0-9]*)\s*\{(\n\s*PyObject_HEAD\n(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{[^\{\}]*\}[^\{\}]*)?)\}[^\{\}]*)?)\}[^\{\}]*)?))\};'
+proc_pattern = r'^\s*([A-Za-z_][A-Za-z0-9_]*(?:\s*\*)?)\s*([A-Za-z][A-Za-z0-9]*)_([A-Za-z_][A-Za-z0-9_]*)\s*\(([^\)]*)\)\s*\{'
+
 source_template = '''\
 //!
 #include <Python.h>
