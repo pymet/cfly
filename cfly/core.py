@@ -44,7 +44,8 @@ class Type:
 
 def create_compiler():
     compiler = new_compiler()
-    compiler.initialize()
+    if hasattr(compiler, 'initialize'):
+        compiler.initialize()
 
     if hasattr(sys, 'real_prefix'):
         compiler.add_library_dir(os.path.join(getattr(sys, 'real_prefix'), 'libs'))
