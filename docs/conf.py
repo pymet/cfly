@@ -27,9 +27,9 @@ copyright = '2018, pymet'
 author = 'pymet'
 
 # The short X.Y version
-version = '0.9.13'
+version = '1.0.0'
 # The full version, including alpha/beta/rc tags
-release = '0.9.13'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
