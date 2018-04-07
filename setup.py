@@ -51,7 +51,7 @@ Example
 
 setup(
     name='cfly',
-    version='1.0.0',
+    version='1.0.1',
     description='Build python extensions on-the-fly. Run C++ code directly from Python',
     long_description=long_description,
     url='https://github.com/pymet/cfly',
