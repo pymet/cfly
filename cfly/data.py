@@ -2,6 +2,8 @@ tps = [
     'am_aiter',
     'am_anext',
     'am_await',
+    'bf_getbuffer',
+    'bf_releasebuffer',
     'mp_ass_subscript',
     'mp_length',
     'mp_subscript',
@@ -75,6 +77,14 @@ tps = [
     'tp_traverse',
 ]
 
+prefixes = {
+    'am': 'tp_as_async',
+    'bf': 'tp_as_buffer',
+    'mp': 'tp_as_mapping',
+    'nb': 'tp_as_number',
+    'sq': 'tp_as_sequence',
+    'tp': None,
+}
 
 type_pattern = r'^\s*struct\s+([A-Za-z][A-Za-z0-9]*)\s*\{(\n\s*PyObject_HEAD\n(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{(?:[^\{\}]*(?:\{[^\{\}]*\}[^\{\}]*)?)\}[^\{\}]*)?)\}[^\{\}]*)?))\};'
 proc_pattern = r'^\s*([A-Za-z_][A-Za-z0-9_]*(?:\s*\*)?)\s*([A-Za-z][A-Za-z0-9]*)_([A-Za-z_][A-Za-z0-9_]*)\s*\(([^\)]*)\)\s*\{'
@@ -177,6 +187,13 @@ PyAsyncMethods /*{typ.name}*/_tp_as_async = {
     (unaryfunc)/*{ typ.am_await or 0 }*/,
     (unaryfunc)/*{ typ.am_aiter or 0 }*/,
     (unaryfunc)/*{ typ.am_anext or 0 }*/,
+};
+//!
+/// endif
+/// if typ.tp_as_buffer
+PyBufferProcs /*{typ.name}*/_tp_as_buffer = {
+    (getbufferproc)/*{ typ.bf_getbuffer or 0 }*/,
+    (releasebufferproc)/*{ typ.bf_releasebuffer or 0 }*/,
 };
 //!
 /// endif

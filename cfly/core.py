@@ -11,7 +11,7 @@ from distutils.sysconfig import customize_compiler, get_config_var, get_python_i
 
 from jinja2 import Template
 
-from .data import module_template, proc_pattern, source_template, tps, type_pattern
+from .data import module_template, prefixes, proc_pattern, source_template, tps, type_pattern
 
 re_type = re.compile(type_pattern, re.M)
 re_proc = re.compile(proc_pattern, re.M)
@@ -88,9 +88,12 @@ def parse_source(source, build_log):
                     setattr(module_types[typ].getset[rest], prefix, Meth(rval, '%(typ)s_%(name)s' % locals(), args))
                     setattr(module_types[typ], 'tp_getset', '%(typ)s_tp_getset' % locals())
 
-                elif prefix in ('am', 'mp', 'nb', 'sq', 'tp'):
+                elif prefix in prefixes:
                     if re.match('(' + '|'.join(tps) + ')', name):
                         setattr(module_types[typ], name, '%(typ)s_%(name)s' % locals())
+                        alias = prefixes[prefix]
+                        if alias:
+                            setattr(module_types[typ], alias, '&%(typ)s_%(alias)s' % locals())
 
                     else:
                         build_log.write(('Unknown %(name)s for %(typ)s_%(name)s\n' % locals()).encode())
