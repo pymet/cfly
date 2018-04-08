@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.0.2] - 2018-04-08
+
+### Added
+
+- support peargs and postargs
+- implement `build_executable` for launchers
+- add `execute` parameter to `build_module`
+
 ## [1.0.1] - 2018-04-07
 
 ### Fixed
@@ -15,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.0.0] - 2018-04-01
 
-[Unreleased]: https://github.com/pymet/cfly/compare/1.0.1...HEAD
+[Unreleased]: https://github.com/pymet/cfly/compare/1.0.2...HEAD
+[1.0.2]: https://github.com/pymet/cfly/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/pymet/cfly/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/pymet/cfly/tree/1.0.0
