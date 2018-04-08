@@ -1,10 +1,6 @@
 cfly
 ====
 
-.. warning::
-
-    CFly is under development. It may change without backward compatibility until the first stable version is reached. The first stable version will be 1.0.0
-
 Installation
 ------------
 
@@ -23,7 +19,7 @@ Reference
 .. py:module:: cfly
 .. py:currentmodule:: cfly
 
-.. autofunction:: build_module(name, source=None, sources=None, preprocess=None, output=None, build_dir='build', include_dirs=None, library_dirs=None, libraries=None, macros=None, cache=True) -> module
+.. autofunction:: build_module(name, source=None, sources=None, preprocess=None, output=None, build_dir='build', include_dirs=None, library_dirs=None, libraries=None, macros=None, compiler_preargs=None, compiler_postargs=None, linker_preargs=None, linker_postargs=None, cache=True) -> module
 
 Examples
 --------

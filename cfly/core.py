@@ -158,7 +158,8 @@ def render_template(template, **kwargs):
 
 def build_module(
         name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
-        include_dirs=None, library_dirs=None, libraries=None, macros=None, cache=True):
+        include_dirs=None, library_dirs=None, libraries=None, macros=None, compiler_preargs=None,
+        compiler_postargs=None, linker_preargs=None, linker_postargs=None, cache=True):
 
     '''
         Args:
@@ -174,6 +175,10 @@ def build_module(
             library_dirs (list): Additional library directories.
             libraries (list): Additional libraries.
             macros (list): Predefined macros. (name, value) pairs.
+            compiler_preargs (list): Compiler preargs.
+            compiler_postargs (list): Compiler postargs.
+            linker_preargs (list): Linker preargs.
+            linker_postargs (list): Linker postargs.
             cache (bool): Enable cache.
 
         Returns:
@@ -212,7 +217,11 @@ def build_module(
         include_dirs,
         library_dirs,
         libraries,
-        macros
+        macros,
+        compiler_preargs,
+        compiler_postargs,
+        linker_preargs,
+        linker_postargs,
     )
 
     if checksum != old_checksum:
@@ -284,8 +293,29 @@ def build_module(
             if todo:
                 for source, original in todo:
                     original_folder = [os.path.abspath(os.path.dirname(original))] if original else []
-                    compiler.compile([source], build_dir, macros, original_folder)
-                compiler.link('shared_object', objects, 'output', build_dir, libraries, [], [], exports)
+                    compiler.compile(
+                        [source],
+                        build_dir,
+                        macros,
+                        original_folder,
+                        0,
+                        compiler_preargs,
+                        compiler_postargs,
+                    )
+
+                compiler.link(
+                    'shared_object',
+                    objects,
+                    'output',
+                    build_dir,
+                    libraries,
+                    [],
+                    [],
+                    exports,
+                    0,
+                    linker_preargs,
+                    linker_postargs,
+                )
 
                 if os.path.isfile(output):
                     try:
