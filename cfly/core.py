@@ -58,11 +58,18 @@ def create_compiler():
     return compiler
 
 
-def load_module(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+def execute_binary(execute, target, name, path):
+    if not execute:
+        return None
+
+    if target == 'executable':
+        return subprocess.call([path])
+
+    if target == 'shared_object':
+        spec = importlib.util.spec_from_file_location(name, path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
 
 
 def parse_source(source, build_log):
@@ -156,37 +163,16 @@ def render_template(template, **kwargs):
     return code
 
 
-def build_module(
-        name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
+def _build(
+        name, source=None, *, target=None, sources=None, preprocess=None, output=None, build_dir='build',
         include_dirs=None, library_dirs=None, libraries=None, macros=None, compiler_preargs=None,
-        compiler_postargs=None, linker_preargs=None, linker_postargs=None, cache=True):
-
-    '''
-        Args:
-            name (str): The module name (must be unique).
-            source (str): the source code in C++.
-
-        Keyword Args:
-            sources (str): Source files.
-            preprocess (str): Source files that need cfly's preprocessing.
-            output (str): The output file. defaults to '{name}.pyd'.
-            build_dir (str): The build directory. defaults to 'build'.
-            include_dirs (list): Additional include directories.
-            library_dirs (list): Additional library directories.
-            libraries (list): Additional libraries.
-            macros (list): Predefined macros. (name, value) pairs.
-            compiler_preargs (list): Compiler preargs.
-            compiler_postargs (list): Compiler postargs.
-            linker_preargs (list): Linker preargs.
-            linker_postargs (list): Linker postargs.
-            cache (bool): Enable cache.
-
-        Returns:
-            the compiled and imported module.
-    '''
+        compiler_postargs=None, linker_preargs=None, linker_postargs=None, execute=False, cache=True):
 
     if output is None:
-        output = name + get_config_var('EXT_SUFFIX')
+        suffix = get_config_var('EXT_SUFFIX')
+        if target == 'executable':
+            suffix = get_config_var('EXE') or ''
+        output = name + suffix
 
     if sources is None:
         sources = []
@@ -228,7 +214,7 @@ def build_module(
         cache = False
 
     if cache and is_up_to_date(output, sources + preprocess):
-        return load_module(name, output)
+        return execute_binary(execute, target, name, output)
 
     with open(os.path.join(build_dir, name + '.log'), 'wb+') as build_log:
         shutil.rmtree(module_home, ignore_errors=True)
@@ -304,7 +290,7 @@ def build_module(
                     )
 
                 compiler.link(
-                    'shared_object',
+                    target,
                     objects,
                     'output',
                     build_dir,
@@ -329,4 +315,102 @@ def build_module(
 
         writeall(module_home, 'args.txt', checksum)
 
-    return load_module(name, output)
+    return execute_binary(execute, target, name, output)
+
+def build_module(
+        name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
+        include_dirs=None, library_dirs=None, libraries=None, macros=None, compiler_preargs=None,
+        compiler_postargs=None, linker_preargs=None, linker_postargs=None, execute=True, cache=True):
+
+    '''
+        Args:
+            name (str): The module name (must be unique).
+            source (str): the source code in C++.
+
+        Keyword Args:
+            sources (str): Source files.
+            preprocess (str): Source files that need cfly's preprocessing.
+            output (str): The output file. defaults to '{name}.pyd'.
+            build_dir (str): The build directory. defaults to 'build'.
+            include_dirs (list): Additional include directories.
+            library_dirs (list): Additional library directories.
+            libraries (list): Additional libraries.
+            macros (list): Predefined macros. (name, value) pairs.
+            compiler_preargs (list): Compiler preargs.
+            compiler_postargs (list): Compiler postargs.
+            linker_preargs (list): Linker preargs.
+            linker_postargs (list): Linker postargs.
+            execute (bool): Load module after compile.
+            cache (bool): Enable cache.
+
+        Returns:
+            the compiled and imported module.
+    '''
+
+    return _build(
+        name=name,
+        source=source,
+        target='shared_object',
+        sources=sources,
+        preprocess=preprocess,
+        output=output,
+        build_dir=build_dir,
+        include_dirs=include_dirs,
+        library_dirs=library_dirs,
+        libraries=libraries,
+        macros=macros,
+        compiler_preargs=compiler_preargs,
+        compiler_postargs=compiler_postargs,
+        linker_preargs=linker_preargs,
+        linker_postargs=linker_postargs,
+        cache=cache,
+    )
+
+def build_executable(
+        name, source=None, *, sources=None, preprocess=None, output=None, build_dir='build',
+        include_dirs=None, library_dirs=None, libraries=None, macros=None, compiler_preargs=None,
+        compiler_postargs=None, linker_preargs=None, linker_postargs=None, execute=False, cache=True):
+
+    '''
+        Args:
+            name (str): The module name (must be unique).
+            source (str): the source code in C++.
+
+        Keyword Args:
+            sources (str): Source files.
+            preprocess (str): Source files that need cfly's preprocessing.
+            output (str): The output file. defaults to '{name}.pyd'.
+            build_dir (str): The build directory. defaults to 'build'.
+            include_dirs (list): Additional include directories.
+            library_dirs (list): Additional library directories.
+            libraries (list): Additional libraries.
+            macros (list): Predefined macros. (name, value) pairs.
+            compiler_preargs (list): Compiler preargs.
+            compiler_postargs (list): Compiler postargs.
+            linker_preargs (list): Linker preargs.
+            linker_postargs (list): Linker postargs.
+            execute (bool): Execute after compile.
+            cache (bool): Enable cache.
+
+        Returns:
+            the compiled and imported module.
+    '''
+
+    return _build(
+        name=name,
+        source=source,
+        target='executable',
+        sources=sources,
+        preprocess=preprocess,
+        output=output,
+        build_dir=build_dir,
+        include_dirs=include_dirs,
+        library_dirs=library_dirs,
+        libraries=libraries,
+        macros=macros,
+        compiler_preargs=compiler_preargs,
+        compiler_postargs=compiler_postargs,
+        linker_preargs=linker_preargs,
+        linker_postargs=linker_postargs,
+        cache=cache,
+    )
