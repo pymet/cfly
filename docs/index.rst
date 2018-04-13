@@ -20,7 +20,6 @@ Reference
 .. py:currentmodule:: cfly
 
 .. autofunction:: build_module(name, source=None, sources=None, preprocess=None, output=None, build_dir='build', include_dirs=None, library_dirs=None, libraries=None, macros=None, compiler_preargs=None, compiler_postargs=None, linker_preargs=None, linker_postargs=None, execute=True, cache=True) -> module
-.. autofunction:: build_executable(name, source=None, sources=None, preprocess=None, output=None, build_dir='build', include_dirs=None, library_dirs=None, libraries=None, macros=None, compiler_preargs=None, compiler_postargs=None, linker_preargs=None, linker_postargs=None, execute=True, cache=True)
 
 Examples
 --------

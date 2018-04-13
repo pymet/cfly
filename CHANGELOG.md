@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.0.3] - 2018-04-13
+
+### Added
+
+- add `output_dir` parameter to `build_module`
+
+### Removed
+
+- unimplement `build_executable`
+- remove `execute` parameter to `build_module`
+
 ## [1.0.2] - 2018-04-08
 
 ### Added
@@ -23,7 +34,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.0.0] - 2018-04-01
 
-[Unreleased]: https://github.com/pymet/cfly/compare/1.0.2...HEAD
+[Unreleased]: https://github.com/pymet/cfly/compare/1.0.3...HEAD
+[1.0.3]: https://github.com/pymet/cfly/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/pymet/cfly/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/pymet/cfly/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/pymet/cfly/tree/1.0.0
